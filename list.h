@@ -67,7 +67,7 @@ int l_length(t_list list);
 /*
     Returns item at index `index`
 */
-Item l_getList(t_list list, int index);
+Item l_get(t_list list, int index);
 
 /*
     Returns item at index `index`

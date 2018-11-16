@@ -8,7 +8,7 @@
 #define DEFAULT_ARR_SIZE 32
 
 // How much array should grow by
-#define ARR_GROW_SCALE 2.0  
+#define ARR_GROW_SCALE 2.0 
 
 // When array should grow
 #define ARR_GROW_TRIGGER 0.7
@@ -22,11 +22,11 @@ struct _list  {
 
 /** Static Functions **/
 
-static void __check(void* p) {
+static void __check(char* s, void* p) {
     if (p)
         return;
-    
-    perror("ArrayList");
+        
+    perror(s);
     exit(-1);
 }
 
@@ -34,14 +34,25 @@ static int __indexOf(t_list list, int index) {
     return list->itemSize * index;
 }
 
+static void move(t_list list, int from, int to) {
+    from = __indexOf(list, from);
+    to = __indexOf(list, to);
+    memcpy(&list->array[to], &list->array[from], list->itemSize);
+}
+
 // Moves elements around index to add an extra spot in array
 static void __makeRoom(t_list list, int index) {
-
-    // Sanity check, i is at least 1. if index is 0, 0 !> 0, so loop wont run on index 0.
-    for (int i = list->noItems+1; i > index; i--) {
-        list->array[i] = list->array[i-1];
+    for (int i = list->noItems; i > index; i--) {
+        move(list, i-1, i);
     }
     list->noItems++;
+}
+
+static void __remove(t_list list, int index) {
+    for (int i = index; i < list->noItems - 1; i++) {
+        move(list, i+1, i);
+    }
+    list->noItems--;
 }
 
 void __insert(t_list list, int index, Item item) {
@@ -49,29 +60,30 @@ void __insert(t_list list, int index, Item item) {
     memcpy (&list->array[real_index], item, list->itemSize);
 }
 
+
 // Resize if noItems >= ARR_GROW_TRIGGER * arraySize
 // Resize if noItems <= arraySize / ARR_GROW_TRIGGER
 static void __resize(t_list list) {
-    int arraySize = list->arraySize; 
+    float arraySize = list->arraySize; 
     int newSize = arraySize;
     
-    if (list->noItems < ARR_GROW_TRIGGER * arraySize &&
-            list->noItems > arraySize / ARR_GROW_TRIGGER) 
-        return;
-    
+
     if (list->noItems >= ARR_GROW_TRIGGER * arraySize)
         newSize *= ARR_GROW_SCALE;
     else if (list->noItems <= arraySize / ARR_GROW_TRIGGER)
         newSize /= ARR_GROW_SCALE;
     else 
         return;
+   
+    if (newSize <= DEFAULT_ARR_SIZE) 
+        return;
 
     // reallocarray __checks for integer overflow 
-    char* newArray = (char*) reallocarray (list->array, list->itemSize, newSize);
-    __check(newArray);
+    char* newArray = (char*) reallocarray (list->array, list->itemSize, (int) newSize);
+    __check("Resize", newArray);
 
     list->array = newArray;
-    list->arraySize = newSize;
+    list->arraySize = (int) newSize;
 }
 
 /** Export Functions **/
@@ -81,12 +93,14 @@ t_list l_create(size_t type_size) {
 
     // Create list
     t_list new = calloc(sizeof(struct _list), 1);
-    __check(new);
+    __check("Create list", new);
 
     // Create array
     new->array = calloc(type_size, DEFAULT_ARR_SIZE);
-    __check(new->array);
+    __check("Create array", new->array);
 
+    new->arraySize = DEFAULT_ARR_SIZE;
+    new->itemSize = type_size;
     return new;
 }
 
@@ -118,4 +132,48 @@ int l_addIndex(t_list list, Item item, int index) {
     __insert(list, index, item); 
     
     return 1;
+}
+
+int l_removeIndex(t_list list, int index) {
+    if (index < 0 || index > list->noItems) 
+        return 0;
+
+    __remove(list, index);
+    return 1;
+}
+
+int l_length(t_list list) {
+    return list->noItems;
+}
+
+
+
+Item l_get(t_list list, int index) {
+    if (index < 0 || index >= list->noItems)
+        return NULL;
+
+    index = __indexOf(list, index);
+    
+    return &list->array[index];
+}
+
+
+void l_foreach(t_list list, void (*apply)(Item)) {
+    for (int i = 0; i < list->noItems; i++) {
+        Item item = l_get(list, i);
+        apply(item);
+    }
+}
+
+
+t_list l_map(t_list list, size_t new_size, Item (*map)(Item)) {
+    t_list new = l_create(new_size);
+   
+    for (int i = 0; i < list->noItems; i++) {
+        Item item = l_get(list, i);
+        Item mapped = map(item);
+
+        l_add(new, mapped);
+    }
+    return new;
 }
