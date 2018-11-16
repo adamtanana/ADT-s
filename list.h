@@ -35,23 +35,23 @@ void l_destroy(t_list);
 int l_add(t_list list, Item item);
 
 /*
-    Add an item at index `index` into the list.
+    Add an item at index `index` into the list. Moves elements to make room
     if index < 0 or index > len list. Will fail and return false
     On creation of a list you must specify the length of the list type
 */
-int l_add(t_list list, Item item, int index);
+int l_addIndex(t_list list, Item item, int index);
 
 /* 
     Remove item from index `index`.
     Returns 1 if success, 0 otherwise.
 */
-int l_remove(t_list list, int index);
+int l_removeIndex(t_list list, int index);
 
 /* 
     Remove first occurence of item in the list.
     Returns 1 if success, 0 otherwise.
 */
-int l_remove(t_list list, Item item);
+int l_removeItem(t_list list, Item item);
 
 /* 
     Remove All occurences of item in the list.
@@ -107,6 +107,6 @@ void l_foreach(t_list list, void (*apply)(Item));
 
 
 */
-t_list l_foreach(t_list list, size_t new_size, Item (*map)(Item));
+t_list l_map(t_list list, size_t new_size, Item (*map)(Item));
 
 #endif
