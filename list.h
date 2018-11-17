@@ -48,12 +48,6 @@ int l_addIndex(t_list list, Item item, int index);
 int l_removeIndex(t_list list, int index);
 
 /* 
-    Remove first occurence of item in the list.
-    Returns 1 if success, 0 otherwise.
-*/
-int l_removeItem(t_list list, Item item);
-
-/* 
     Remove All occurences of item in the list.
     Returns 1 if success, 0 otherwise.
 */
@@ -70,9 +64,33 @@ int l_length(t_list list);
 Item l_get(t_list list, int index);
 
 /*
-    Returns item at index `index`
+    Deep clone of list
 */
-Item l_union(t_list list, int index);
+t_list l_clone(t_list list);
+
+/*
+    Returns 1 if itemin list
+*/
+int l_contains(t_list list, Item item);
+
+/* 
+    Returns first index of item
+*/
+int l_indexOf(t_list list, Item item);
+
+
+/*
+    Returns item at index `index`
+    Implemented in .h file
+*/
+static inline Item l_union(t_list a, t_list b) {
+    t_list new = l_clone(a);
+    
+    for (int i = 0; i < l_length(b); i++) {
+        l_add(new, l_get(b, i));
+    }
+    return new;
+}
 
 /*
     Returns if each list contains both;
@@ -88,7 +106,12 @@ int l_equals(t_list lista, t_list listb);
 /*
     Apply function `void apply(Item item)` to each element in list
 */
-void l_foreach(t_list list, void (*apply)(Item));
+static inline void l_foreach(t_list list, void (*apply)(Item)) {
+    for (int i = 0; i < l_length(list); i++) {
+        Item item = l_get(list, i);
+        apply(item);
+    }
+}
 
 /*
     Map each element from one type to another (types are arbritrary).
@@ -107,6 +130,16 @@ void l_foreach(t_list list, void (*apply)(Item));
 
 
 */
-t_list l_map(t_list list, size_t new_size, Item (*map)(Item));
+static inline t_list l_map(t_list list, size_t new_size, Item (*map)(Item)) {
+    t_list new = l_create(new_size);
+   
+    for (int i = 0; i < l_length(list); i++) {
+        Item item = l_get(list, i);
+        Item mapped = map(item);
+
+        l_add(new, mapped);
+    }
+    return new;
+}
 
 #endif

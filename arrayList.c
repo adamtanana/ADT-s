@@ -142,11 +142,46 @@ int l_removeIndex(t_list list, int index) {
     return 1;
 }
 
-int l_length(t_list list) {
-    return list->noItems;
+int l_removeAll(t_list list, Item item) {
+    if (list == NULL || item == NULL)
+        return 0;
+    
+    int index;
+    while ((index = l_indexOf(list, item)) != -1) {
+        __remove(list, index);
+    }
+
+    return 1;
 }
 
+int l_indexOf(t_list list, Item item) {
+    if (list == NULL)
+        return -1;
 
+    for (int i = 0; i < l_length(list); i++) {
+        Item current = l_get(list, i);
+        
+        if (current == item || memcmp(current, item, list->itemSize)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+int l_contains(t_list list, Item item) {
+    if (list == NULL)
+        return 0;
+
+    
+    return l_indexOf(list, item) != -1;
+}
+
+int l_length(t_list list) {
+    if (list == NULL)
+        return 0;
+    return list->noItems;
+}
 
 Item l_get(t_list list, int index) {
     if (index < 0 || index >= list->noItems)
@@ -157,23 +192,40 @@ Item l_get(t_list list, int index) {
     return &list->array[index];
 }
 
+t_list l_clone(t_list list) {
+    if (list == NULL)
+        return NULL;
 
-void l_foreach(t_list list, void (*apply)(Item)) {
-    for (int i = 0; i < list->noItems; i++) {
-        Item item = l_get(list, i);
-        apply(item);
-    }
+    t_list new = l_create(list->itemSize);
+
+    for(int i = 0; i < 10; i++) {
+        l_add(list, l_get(list, i));
+    }   
+
+
+    return new;
 }
 
+int l_equals(t_list lista, t_list listb) {
+    if (l_length(lista) != l_length(listb)) 
+        return 0;
 
-t_list l_map(t_list list, size_t new_size, Item (*map)(Item)) {
-    t_list new = l_create(new_size);
-   
-    for (int i = 0; i < list->noItems; i++) {
-        Item item = l_get(list, i);
-        Item mapped = map(item);
-
-        l_add(new, mapped);
+    for (int i = 0; i < l_length(lista); i++) {
+        Item current = l_get(listb, i);
+        
+        if (!l_contains(listb, current)) {
+            return 0;
+        }
     }
-    return new;
+
+
+    for (int i = 0; i < l_length(listb); i++) {
+        Item current = l_get(lista, i);
+        
+        if (!l_contains(lista, current)) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
